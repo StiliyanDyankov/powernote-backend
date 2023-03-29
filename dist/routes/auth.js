@@ -13,33 +13,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const mongoose_1 = __importDefault(require("mongoose"));
-const auth_1 = __importDefault(require("./routes/auth"));
-const config_1 = __importDefault(require("config"));
-const app = (0, express_1.default)();
-// config vars
-const port = config_1.default.get("port");
-const db = config_1.default.get("db");
-// connect to db
-const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        console.log(db);
-        yield mongoose_1.default.connect(db);
+const authDB_1 = require("../db/authDB");
+const router = express_1.default.Router();
+router.get("/", (req, res) => {
+    res.status(200).send("Auth router works");
+});
+router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("req body post to api", req.body);
+    // create user
+    const result = yield (0, authDB_1.createUser)(req.body);
+    console.log("result register api post", result);
+    if (result.name) {
+        return res.status(500).send("INTERNAL ERROR!!! Couldn't create new user.");
     }
-    catch (e) {
-        console.log(e);
-    }
-    console.log(`[db]: db is running at ${db}`);
-});
-connectDb();
-// middleware
-app.use(express_1.default.json());
-app.use("/api/auth", auth_1.default);
-// test only
-app.get("/", (req, res) => {
-    res.status(200).send("Server works");
-});
-// listen
-app.listen(port, () => {
-    console.log(`[server]: Server is running at http://localhost:${port}`);
-});
+    return res.status(200).send(result);
+}));
+exports.default = router;
