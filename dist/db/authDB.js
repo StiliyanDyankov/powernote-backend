@@ -62,10 +62,8 @@ exports.createUser = createUser;
 const findUser = (email) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log("passed to db email", email);
-        const result = yield exports.Users.find({
+        const result = yield exports.Users.exists({
             email: email,
-        }, null, {
-            limit: 1,
         });
         return result;
     }

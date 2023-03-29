@@ -39,7 +39,9 @@ const userSchema = new mongoose.Schema({
 
 export const Users = mongoose.model("users", userSchema);
 
-export const createUser = async (user: User): Promise<mongoose.Error | User> => {
+export const createUser = async (
+    user: User
+): Promise<mongoose.Error | User> => {
     try {
         console.log("passed to db customer", user);
         const result = await Users.create({
@@ -53,18 +55,14 @@ export const createUser = async (user: User): Promise<mongoose.Error | User> => 
     }
 };
 
-export const findUser = async (email: string) => {
+export const findUser = async (
+    email: string
+): Promise<mongoose.Error | { _id: mongoose.Types.ObjectId } | null> => {
     try {
         console.log("passed to db email", email);
-        const result = await Users.find(
-            {
-                email: email,
-            },
-            null,
-            {
-                limit: 1,
-            }
-        );
+        const result = await Users.exists({
+            email: email,
+        });
         return result;
     } catch (err: any) {
         console.log("could not find user with given email", err);
