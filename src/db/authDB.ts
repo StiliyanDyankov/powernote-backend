@@ -1,4 +1,4 @@
-import mongoose, { Error } from "mongoose";
+import mongoose from "mongoose";
 import config from "config";
 
 mongoose.set("strictQuery", false);
@@ -43,7 +43,6 @@ export const createUser = async (
     user: User
 ): Promise<mongoose.Error | User> => {
     try {
-        console.log("passed to db customer", user);
         const result = await Users.create({
             email: user.email,
             password: user.password,
@@ -57,10 +56,13 @@ export const createUser = async (
 
 export const findUser = async (
     email: string
-): Promise<mongoose.Error | { _id: mongoose.Types.ObjectId } | null> => {
+): Promise<
+    | mongoose.Error
+    | mongoose.Document<mongoose.Types.ObjectId, any, User>
+    | null
+> => {
     try {
-        console.log("passed to db email", email);
-        const result = await Users.exists({
+        const result = await Users.findOne({
             email: email,
         });
         return result;
@@ -72,7 +74,6 @@ export const findUser = async (
 
 export const changePass = async (user: User) => {
     try {
-        console.log("passed to the db changepass", user);
         const result = await Users.updateOne(
             { email: user.email },
             { password: user.password }

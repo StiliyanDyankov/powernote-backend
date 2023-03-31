@@ -46,7 +46,6 @@ const userSchema = new mongoose_1.default.Schema({
 exports.Users = mongoose_1.default.model("users", userSchema);
 const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("passed to db customer", user);
         const result = yield exports.Users.create({
             email: user.email,
             password: user.password,
@@ -61,8 +60,7 @@ const createUser = (user) => __awaiter(void 0, void 0, void 0, function* () {
 exports.createUser = createUser;
 const findUser = (email) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("passed to db email", email);
-        const result = yield exports.Users.exists({
+        const result = yield exports.Users.findOne({
             email: email,
         });
         return result;
@@ -75,7 +73,6 @@ const findUser = (email) => __awaiter(void 0, void 0, void 0, function* () {
 exports.findUser = findUser;
 const changePass = (user) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        console.log("passed to the db changepass", user);
         const result = yield exports.Users.updateOne({ email: user.email }, { password: user.password });
         return result;
     }

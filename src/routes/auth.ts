@@ -10,6 +10,7 @@ import {
 } from "../utils/authValidation";
 import { EmailErrors } from "./../utils/authValidation";
 import mongoose from "mongoose";
+import { pick } from "lodash";
 
 const router = express.Router();
 
@@ -23,10 +24,7 @@ router.get("/", (req: Request, res: Response) => {
 });
 
 router.post("/register", async (req: Request, res: Response) => {
-    console.log("req body post to api", req.body);
-    // TODO: Add validation with joi
-
-    let userCredentials: User = { ...req.body };
+    let userCredentials: User = pick(req.body, ["email", "password"]);
 
     // check if email exists in req body
     if (!userCredentials.email) {
@@ -47,14 +45,20 @@ router.post("/register", async (req: Request, res: Response) => {
         };
         return res.status(401).send(resEmailErrors);
     }
-    
+
     // check if such user exists
     const isRegistered = await findUser(userCredentials.email);
 
     // handle case when such user exists
     if (isRegistered === null) {
+        // don't do anything; pass on to the next steps
     } else if (
-        "_id" in (isRegistered as unknown as { _id: mongoose.Types.ObjectId })
+        "_id" in
+        (isRegistered as unknown as mongoose.Document<
+            mongoose.Types.ObjectId,
+            any,
+            User
+        >)
     ) {
         const resEmailErrors: ResCredentialErrors = {
             message: "Account with such email already exists.",
@@ -72,7 +76,7 @@ router.post("/register", async (req: Request, res: Response) => {
             .status(500)
             .send("INTERNAL ERROR!!! Couldn't create new user.");
     }
-    
+
     // check if password exists
     if (!userCredentials.password) {
         const noPasswordError = checkPasswordErrors("");
@@ -103,17 +107,142 @@ router.post("/register", async (req: Request, res: Response) => {
     // create user
     const result = await createUser(userCredentials);
 
-    console.log("result register api post", result);
-
     // handle error case from createUser()
     if ((result as Error).message) {
-        return res
-            .status(500)
-            .send("INTERNAL ERROR!!! Couldn't create new user.");
+        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
     }
 
     // handle success case from createUser()
     return res.status(200).send(req.body);
+});
+
+router.post("/login", async (req: Request, res: Response) => {
+    let userCredentials: User = pick(req.body, ["email", "password"]);
+
+    // check if email exists in req body
+    if (!userCredentials.email) {
+        const resEmailErrors: ResCredentialErrors = {
+            message: "No email provided.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+
+    // check for email errors
+    // no validation needed for login UX
+    // kept to protect against malicious attacks
+    const emailErrors = checkEmailErrors(userCredentials.email);
+    if (!validateEmail(emailErrors)) {
+        const resEmailErrors: ResCredentialErrors = {
+            message: "Account with such email doesn't exist.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+
+    // check if such user exists
+    const isRegistered = await findUser(userCredentials.email);
+
+    let hashedPass = "";
+    // handle case when such user exists
+    if (isRegistered === null) {
+        const resEmailErrors: ResCredentialErrors = {
+            message: "Account with such email doesn't exist.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    } else if (
+        "_id" in
+        (isRegistered as unknown as mongoose.Document<
+            mongoose.Types.ObjectId,
+            any,
+            User
+        >)
+    ) {
+        // don't do anything; pass on to the next steps
+        // mongoose.Schema<User>
+        // return res.status(200).send((isRegistered as unknown as User).password);
+        hashedPass = (isRegistered as unknown as User).password;
+    }
+    // handle error case from findUser()
+    else if ("message" in (isRegistered as unknown as Error)) {
+        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    }
+
+    // check if password exists
+    if (!userCredentials.password) {
+        // const noPasswordError = checkPasswordErrors("");
+        const resPasswordErrors: ResCredentialErrors = {
+            message: "Invalid password.",
+            errors: {
+                noPasswordServer: true,
+                noLength: false,
+                noUppercase: false,
+                noLowercase: false,
+                noNumber: false,
+                noSymbol: false,
+            },
+        };
+        return res.status(401).send(resPasswordErrors);
+    }
+
+    // check for password errors
+    // no validation needed for login UX
+    // kept to protect against malicious attacks
+    const passwordErrors = checkPasswordErrors(userCredentials.password);
+    if (!validatePassword(passwordErrors)) {
+        const resPasswordErrors: ResCredentialErrors = {
+            message: "Invalid password.",
+            errors: {
+                noPasswordServer: true,
+                noLength: false,
+                noUppercase: false,
+                noLowercase: false,
+                noNumber: false,
+                noSymbol: false,
+            },
+        };
+        return res.status(401).send(resPasswordErrors);
+    }
+
+    // validate password
+    let passIsValid = false;
+    if (hashedPass !== "") {
+        passIsValid = await bcrypt.compare(
+            userCredentials.password,
+            hashedPass
+        );
+    }
+
+    // handle password validation paths
+    if (!passIsValid) {
+        const resPasswordErrors: ResCredentialErrors = {
+            message: "Invalid password.",
+            errors: {
+                noPasswordServer: true,
+                noLength: false,
+                noUppercase: false,
+                noLowercase: false,
+                noNumber: false,
+                noSymbol: false,
+            },
+        };
+        return res.status(401).send(resPasswordErrors);
+    } else {
+        return res.status(200).send(req.body);
+    }
 });
 
 export default router;
