@@ -43,10 +43,11 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     // check if such user exists
     const isRegistered = yield (0, authDB_1.findUser)(userCredentials.email);
-    // handle case when such user exists
+    // handle case when such user doesn't exist
     if (isRegistered === null) {
         // don't do anything; pass on to the next steps
     }
+    // handle case when such user exists
     else if ("_id" in
         isRegistered) {
         const resEmailErrors = {
@@ -223,7 +224,7 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
         return res.status(401).send(resEmailErrors);
     }
     // check for email errors
-    // no validation needed for login UX
+    // no validation needed for auth UX
     // kept to protect against malicious attacks
     const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
     if (!(0, authValidation_1.validateEmail)(emailErrors)) {
@@ -262,5 +263,90 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
         return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
     }
     return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+}));
+router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let userCredentials = (0, lodash_1.pick)(req.body, ["email", "password"]);
+    // check if email exists in credentials
+    if (!userCredentials.email) {
+        const resEmailErrors = {
+            message: "No email provided.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+    // check for email errors
+    // no validation needed for login UX
+    // kept to protect against malicious attacks
+    const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
+    if (!(0, authValidation_1.validateEmail)(emailErrors)) {
+        const resEmailErrors = {
+            message: "Account with such email doesn't exist.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+    // check if such user exists
+    const isRegistered = yield (0, authDB_1.findUser)(userCredentials.email);
+    // handle case when such user doesn't exist
+    if (isRegistered === null) {
+        const resEmailErrors = {
+            message: "Account with such email doesn't exist.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+    // handle success case
+    else if ("_id" in
+        isRegistered) {
+        // don't do anything; pass on to the next steps
+    }
+    // handle error case from findUser()
+    else if ("message" in isRegistered) {
+        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    }
+    // check if password exists in credentials
+    if (!userCredentials.password) {
+        const noPasswordError = (0, authValidation_1.checkPasswordErrors)("");
+        const resPasswordErrors = {
+            message: "No password provided.",
+            errors: noPasswordError,
+        };
+        return res.status(401).send(resPasswordErrors);
+    }
+    // check for password errors
+    const passwordErrors = (0, authValidation_1.checkPasswordErrors)(userCredentials.password);
+    if (!(0, authValidation_1.validatePassword)(passwordErrors)) {
+        const resPasswordErrors = {
+            message: "Invalid password.",
+            errors: passwordErrors,
+        };
+        return res.status(401).send(resPasswordErrors);
+    }
+    // hash password
+    let hashedUserCredentials = Object.assign({}, userCredentials);
+    const salt = yield bcrypt_1.default.genSalt();
+    hashedUserCredentials.password = yield bcrypt_1.default.hash(userCredentials.password, salt);
+    // create user
+    const result = yield (0, authDB_1.changePass)(hashedUserCredentials);
+    // handle error case from createUser()
+    if (result.message) {
+        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    }
+    else {
+        // handle success case from createUser()
+        return res.status(200).send(userCredentials);
+    }
 }));
 exports.default = router;

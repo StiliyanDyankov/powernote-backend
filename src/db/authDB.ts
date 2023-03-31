@@ -72,13 +72,13 @@ export const findUser = async (
     }
 };
 
-export const changePass = async (user: User) => {
+export const changePass = async (user: User): Promise<mongoose.Error | boolean> => {
     try {
         const result = await Users.updateOne(
             { email: user.email },
             { password: user.password }
         );
-        return result;
+        return result.acknowledged;
     } catch (err: any) {
         console.log("could not update user with given email", err);
         return err;

@@ -74,7 +74,7 @@ exports.findUser = findUser;
 const changePass = (user) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const result = yield exports.Users.updateOne({ email: user.email }, { password: user.password });
-        return result;
+        return result.acknowledged;
     }
     catch (err) {
         console.log("could not update user with given email", err);
