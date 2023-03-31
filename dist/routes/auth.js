@@ -23,7 +23,7 @@ router.get("/", (req, res) => {
 });
 router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let userCredentials = (0, lodash_1.pick)(req.body, ["email", "password"]);
-    // check if email exists in req body
+    // check if email exists in credentials
     if (!userCredentials.email) {
         const unprovidedEmailError = (0, authValidation_1.checkEmailErrors)("");
         const resEmailErrors = {
@@ -65,7 +65,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
             .status(500)
             .send("INTERNAL ERROR!!! Couldn't create new user.");
     }
-    // check if password exists
+    // check if password exists in credentials
     if (!userCredentials.password) {
         const noPasswordError = (0, authValidation_1.checkPasswordErrors)("");
         const resPasswordErrors = {
@@ -84,20 +84,23 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         return res.status(401).send(resPasswordErrors);
     }
     // hash password
+    let hashedUserCredentials = Object.assign({}, userCredentials);
     const salt = yield bcrypt_1.default.genSalt();
-    userCredentials.password = yield bcrypt_1.default.hash(userCredentials.password, salt);
+    hashedUserCredentials.password = yield bcrypt_1.default.hash(userCredentials.password, salt);
     // create user
-    const result = yield (0, authDB_1.createUser)(userCredentials);
+    const result = yield (0, authDB_1.createUser)(hashedUserCredentials);
     // handle error case from createUser()
     if (result.message) {
         return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
     }
-    // handle success case from createUser()
-    return res.status(200).send(req.body);
+    else {
+        // handle success case from createUser()
+        return res.status(200).send(userCredentials);
+    }
 }));
 router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let userCredentials = (0, lodash_1.pick)(req.body, ["email", "password"]);
-    // check if email exists in req body
+    // check if email exists in credentials
     if (!userCredentials.email) {
         const resEmailErrors = {
             message: "No email provided.",
@@ -126,8 +129,8 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     // check if such user exists
     const isRegistered = yield (0, authDB_1.findUser)(userCredentials.email);
+    // handle case when such user doesn't exist
     let hashedPass = "";
-    // handle case when such user exists
     if (isRegistered === null) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
@@ -141,9 +144,6 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     else if ("_id" in
         isRegistered) {
-        // don't do anything; pass on to the next steps
-        // mongoose.Schema<User>
-        // return res.status(200).send((isRegistered as unknown as User).password);
         hashedPass = isRegistered.password;
     }
     // handle error case from findUser()
@@ -152,7 +152,6 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     }
     // check if password exists
     if (!userCredentials.password) {
-        // const noPasswordError = checkPasswordErrors("");
         const resPasswordErrors = {
             message: "Invalid password.",
             errors: {
@@ -204,8 +203,64 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         };
         return res.status(401).send(resPasswordErrors);
     }
+    // handle success case
     else {
-        return res.status(200).send(req.body);
+        return res.status(200).send(userCredentials);
     }
+}));
+router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let userCredentials = (0, lodash_1.pick)(req.body, ["email"]);
+    // check if email exists in credentials
+    if (!userCredentials.email) {
+        const resEmailErrors = {
+            message: "No email provided.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+    // check for email errors
+    // no validation needed for login UX
+    // kept to protect against malicious attacks
+    const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
+    if (!(0, authValidation_1.validateEmail)(emailErrors)) {
+        const resEmailErrors = {
+            message: "Account with such email doesn't exist.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+    // check if such user exists
+    const isRegistered = yield (0, authDB_1.findUser)(userCredentials.email);
+    // handle case when such user doesn't exist
+    if (isRegistered === null) {
+        const resEmailErrors = {
+            message: "Account with such email doesn't exist.",
+            errors: {
+                noEmailServer: true,
+                invalidEmailForm: false,
+                alreadyExists: false,
+            },
+        };
+        return res.status(401).send(resEmailErrors);
+    }
+    // handle success case
+    else if ("_id" in
+        isRegistered) {
+        // TODO: trigger validation code gen
+        return res.status(200).send(userCredentials);
+    }
+    // handle error case from findUser()
+    else if ("message" in isRegistered) {
+        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    }
+    return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
 }));
 exports.default = router;
