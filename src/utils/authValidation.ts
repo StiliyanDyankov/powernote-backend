@@ -26,9 +26,6 @@ export const checkPasswordErrors = (password: string): PasswordErrors => {
         noNumber: false,
         noSymbol: false,
     };
-    Object.keys(intErrors).forEach(
-        (k) => (intErrors[k as keyof PasswordErrors] = false)
-    );
     const validationRes = passwordFormSchema.validate(password, {
         abortEarly: false,
     });
@@ -71,6 +68,7 @@ export const validatePassword = (errors: PasswordErrors): boolean => {
 export interface EmailErrors {
     noEmailServer: boolean;
     invalidEmailForm: boolean;
+    alreadyExists: boolean;
 }
 
 export const emailFormSchema = Joi.string().email({
@@ -78,13 +76,11 @@ export const emailFormSchema = Joi.string().email({
 });
 
 export const checkEmailErrors = (email: string): EmailErrors => {
-    let intErrors = {
+    let intErrors: EmailErrors = {
         noEmailServer: false,
         invalidEmailForm: false,
+        alreadyExists: false,
     };
-    Object.keys(intErrors).forEach(
-        (k) => (intErrors[k as keyof EmailErrors] = false)
-    );
     const validationRes = emailFormSchema.validate(email);
     if (typeof validationRes.error === "undefined") {
         return intErrors;

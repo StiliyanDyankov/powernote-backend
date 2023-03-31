@@ -20,7 +20,6 @@ const checkPasswordErrors = (password) => {
         noNumber: false,
         noSymbol: false,
     };
-    Object.keys(intErrors).forEach((k) => (intErrors[k] = false));
     const validationRes = exports.passwordFormSchema.validate(password, {
         abortEarly: false,
     });
@@ -70,8 +69,8 @@ const checkEmailErrors = (email) => {
     let intErrors = {
         noEmailServer: false,
         invalidEmailForm: false,
+        alreadyExists: false,
     };
-    Object.keys(intErrors).forEach((k) => (intErrors[k] = false));
     const validationRes = exports.emailFormSchema.validate(email);
     if (typeof validationRes.error === "undefined") {
         return intErrors;

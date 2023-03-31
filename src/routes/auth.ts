@@ -28,12 +28,12 @@ router.post("/register", async (req: Request, res: Response) => {
 
     let userCredentials: User = { ...req.body };
 
-    // check if email exists
+    // check if email exists in req body
     if (!userCredentials.email) {
-        const noEmailError = checkEmailErrors("");
+        const unprovidedEmailError = checkEmailErrors("");
         const resEmailErrors: ResCredentialErrors = {
             message: "No email provided.",
-            errors: noEmailError,
+            errors: unprovidedEmailError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -56,7 +56,15 @@ router.post("/register", async (req: Request, res: Response) => {
     } else if (
         "_id" in (isRegistered as unknown as { _id: mongoose.Types.ObjectId })
     ) {
-        return res.status(409).send("Account with such email already exists.");
+        const resEmailErrors: ResCredentialErrors = {
+            message: "Account with such email already exists.",
+            errors: {
+                noEmailServer: false,
+                invalidEmailForm: false,
+                alreadyExists: true,
+            },
+        };
+        return res.status(409).send(resEmailErrors);
     }
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {

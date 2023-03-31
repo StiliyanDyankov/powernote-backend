@@ -24,12 +24,12 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     console.log("req body post to api", req.body);
     // TODO: Add validation with joi
     let userCredentials = Object.assign({}, req.body);
-    // check if email exists
+    // check if email exists in req body
     if (!userCredentials.email) {
-        const noEmailError = (0, authValidation_1.checkEmailErrors)("");
+        const unprovidedEmailError = (0, authValidation_1.checkEmailErrors)("");
         const resEmailErrors = {
             message: "No email provided.",
-            errors: noEmailError,
+            errors: unprovidedEmailError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -48,7 +48,15 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     if (isRegistered === null) {
     }
     else if ("_id" in isRegistered) {
-        return res.status(409).send("Account with such email already exists.");
+        const resEmailErrors = {
+            message: "Account with such email already exists.",
+            errors: {
+                noEmailServer: false,
+                invalidEmailForm: false,
+                alreadyExists: true,
+            },
+        };
+        return res.status(409).send(resEmailErrors);
     }
     // handle error case from findUser()
     else if ("message" in isRegistered) {
