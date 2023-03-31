@@ -299,7 +299,7 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
             any,
             User
         >)
-    ) {
+    ) { 
         // TODO: trigger validation code gen
         return res.status(200).send(userCredentials);
     }
