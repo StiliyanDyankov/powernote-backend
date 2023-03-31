@@ -14,7 +14,7 @@ const connectDb = async () => {
     }
     console.log(`[db]: db is running at ${db}`);
 };
-connectDb();
+// connectDb();
 
 export interface User {
     email: string;

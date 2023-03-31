@@ -18,6 +18,11 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const authValidation_1 = require("../utils/authValidation");
 const lodash_1 = require("lodash");
 const router = express_1.default.Router();
+const noEmailServerError = {
+    noEmailServer: true,
+    invalidEmailForm: false,
+    alreadyExists: false,
+};
 router.get("/", (req, res) => {
     res.status(200).send("Auth router works");
 });
@@ -90,6 +95,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     hashedUserCredentials.password = yield bcrypt_1.default.hash(userCredentials.password, salt);
     // create user
     const result = yield (0, authDB_1.createUser)(hashedUserCredentials);
+    // TODO: Here should be validation code handling
     // handle error case from createUser()
     if (result.message) {
         return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
@@ -105,11 +111,7 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!userCredentials.email) {
         const resEmailErrors = {
             message: "No email provided.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -120,11 +122,7 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (!(0, authValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -135,11 +133,7 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     if (isRegistered === null) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -215,11 +209,7 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
     if (!userCredentials.email) {
         const resEmailErrors = {
             message: "No email provided.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -230,11 +220,7 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
     if (!(0, authValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -244,18 +230,14 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
     if (isRegistered === null) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
     // handle success case
     else if ("_id" in
         isRegistered) {
-        // TODO: trigger validation code gen
+        // TODO: Here should be validation code handling
         return res.status(200).send(userCredentials);
     }
     // handle error case from findUser()
@@ -270,11 +252,7 @@ router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0
     if (!userCredentials.email) {
         const resEmailErrors = {
             message: "No email provided.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -285,11 +263,7 @@ router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0
     if (!(0, authValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }
@@ -299,11 +273,7 @@ router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0
     if (isRegistered === null) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
-            errors: {
-                noEmailServer: true,
-                invalidEmailForm: false,
-                alreadyExists: false,
-            },
+            errors: noEmailServerError,
         };
         return res.status(401).send(resEmailErrors);
     }

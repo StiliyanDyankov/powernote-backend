@@ -27,7 +27,6 @@ const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     console.log(`[db]: db is running at ${db}`);
 });
-connectDb();
 const userSchema = new mongoose_1.default.Schema({
     email: {
         type: String,
