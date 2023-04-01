@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const auth_1 = __importDefault(require("./routes/auth"));
+const verification_1 = __importDefault(require("./routes/verification"));
 const config_1 = __importDefault(require("config"));
 const app = (0, express_1.default)();
 // config vars
@@ -35,6 +36,7 @@ connectDb();
 // middleware
 app.use(express_1.default.json());
 app.use("/api/auth", auth_1.default);
+app.use("/api/verification", verification_1.default);
 // test only
 app.get("/", (req, res) => {
     res.status(200).send("Server works");

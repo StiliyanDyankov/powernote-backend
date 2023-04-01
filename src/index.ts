@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import mongoose from "mongoose";
 import routerAuth from "./routes/auth";
+import routerVerification from "./routes/verification";
 import config from "config";
 
 const app = express();
@@ -24,6 +25,7 @@ connectDb();
 // middleware
 app.use(express.json());
 app.use("/api/auth", routerAuth);
+app.use("/api/verification", routerVerification);
 
 
 // test only

@@ -11,6 +11,7 @@ import {
 import { EmailErrors } from "./../utils/authValidation";
 import mongoose from "mongoose";
 import { pick } from "lodash";
+import { handleVerificationCode } from "../utils/verificationCode";
 
 const router = express.Router();
 
@@ -106,6 +107,7 @@ router.post("/register", async (req: Request, res: Response) => {
     }
 
     // hash password
+    // TODO: to be moved to the other endpoint where the actual write is exec
     let hashedUserCredentials: User = { ...userCredentials };
     const salt = await bcrypt.genSalt();
     hashedUserCredentials.password = await bcrypt.hash(
@@ -113,17 +115,25 @@ router.post("/register", async (req: Request, res: Response) => {
         salt
     );
 
-    // create user
-    const result = await createUser(hashedUserCredentials);
     // TODO: Here should be validation code handling
+    // TODO: Here should be jwt issuing
+
+    const token = handleVerificationCode({ email: userCredentials.email, password: userCredentials.password });
+    return res.status(200).json({
+        message: "Authentication successful!",
+        token: "Bearer " + token,
+    });
+
+    // create user
+    // const result = await createUser(hashedUserCredentials);
 
     // handle error case from createUser()
-    if ((result as Error).message) {
-        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
-    } else {
-        // handle success case from createUser()
-        return res.status(200).send(userCredentials);
-    }
+    // if ((result as Error).message) {
+    //     return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    // } else {
+    //     // handle success case from createUser()
+    //     return res.status(200).send(userCredentials);
+    // }
 });
 
 router.post("/login", async (req: Request, res: Response) => {
@@ -285,8 +295,13 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
             User
         >)
     ) {
-        // TODO: Here should be validation code handling
-        return res.status(200).send(userCredentials);
+        // Here should be validation code handling
+        // Here should be jwt issuing
+        const token = handleVerificationCode({ email: userCredentials.email });
+        return res.status(200).json({
+            message: "Authentication successful!",
+            token: "Bearer " + token,
+        });
     }
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {

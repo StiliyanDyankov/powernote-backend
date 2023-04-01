@@ -17,6 +17,7 @@ const authDB_1 = require("../db/authDB");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const authValidation_1 = require("../utils/authValidation");
 const lodash_1 = require("lodash");
+const verificationCode_1 = require("../utils/verificationCode");
 const router = express_1.default.Router();
 const noEmailServerError = {
     noEmailServer: true,
@@ -90,20 +91,26 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         return res.status(401).send(resPasswordErrors);
     }
     // hash password
+    // TODO: to be moved to the other endpoint where the actual write is exec
     let hashedUserCredentials = Object.assign({}, userCredentials);
     const salt = yield bcrypt_1.default.genSalt();
     hashedUserCredentials.password = yield bcrypt_1.default.hash(userCredentials.password, salt);
-    // create user
-    const result = yield (0, authDB_1.createUser)(hashedUserCredentials);
     // TODO: Here should be validation code handling
+    // TODO: Here should be jwt issuing
+    const token = (0, verificationCode_1.handleVerificationCode)({ email: userCredentials.email, password: userCredentials.password });
+    return res.status(200).json({
+        message: "Authentication successful!",
+        token: "Bearer " + token,
+    });
+    // create user
+    // const result = await createUser(hashedUserCredentials);
     // handle error case from createUser()
-    if (result.message) {
-        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
-    }
-    else {
-        // handle success case from createUser()
-        return res.status(200).send(userCredentials);
-    }
+    // if ((result as Error).message) {
+    //     return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    // } else {
+    //     // handle success case from createUser()
+    //     return res.status(200).send(userCredentials);
+    // }
 }));
 router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let userCredentials = (0, lodash_1.pick)(req.body, ["email", "password"]);
@@ -237,8 +244,13 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
     // handle success case
     else if ("_id" in
         isRegistered) {
-        // TODO: Here should be validation code handling
-        return res.status(200).send(userCredentials);
+        // Here should be validation code handling
+        // Here should be jwt issuing
+        const token = (0, verificationCode_1.handleVerificationCode)({ email: userCredentials.email });
+        return res.status(200).json({
+            message: "Authentication successful!",
+            token: "Bearer " + token,
+        });
     }
     // handle error case from findUser()
     else if ("message" in isRegistered) {
