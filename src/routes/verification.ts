@@ -2,8 +2,9 @@ import express, { NextFunction, Request, Response } from "express";
 import { isEmpty, pick } from "lodash";
 import jwt from "jsonwebtoken";
 import config from "config";
-import { User, createUser } from "../db/authDB";
+import { User, createUser } from "../db/portalDB";
 import bcrypt from "bcrypt";
+import { generateAccessTokenApp } from "../utils/jwt";
 
 const router = express.Router();
 
@@ -34,19 +35,19 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
 
     // get only the contents of the header and clean it to get token
     const token = authHeader.authorization?.substring(7);
-    
+
     // handle case when the actual token doesn't exist in the string
     if (token === undefined || token === "") {
         return res.status(401).json({
             message: "Unauthorized.",
         });
     }
-    
+
     // handle case when verification code is empty
     if (
         typeof providedCode.verificationCode !== "string" &&
         (providedCode.verificationCode as string).length !== 5
-        ) {
+    ) {
         return res.status(409).json({
             message: "Invalid verification code",
         });
@@ -61,7 +62,7 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
             message: "Session expired. Please retry again.",
         });
     }
-    
+
     // return res.status(200).send(payload);
 
     // compare code in jwt payload to the one provided by user
@@ -96,15 +97,23 @@ router.post("/register", validateReq, async (req: Request, res: Response) => {
 
     // handle error case from createUser()
     if ((result as Error).message) {
-        return res
-            .status(500)
-            .json({
-                message: "INTERNAL ERROR!!! User already registered."
-            });
+        return res.status(500).json({
+            message: "User already registered.",
+        });
     } else {
         // handle success case from createUser()
         return res.status(200).send(userCredentials);
     }
+});
+
+router.post("/forgot", validateReq, async (req: Request, res: Response) => {
+    let userCredentials: { email: string } = pick(req.body, ["email"]);
+
+    const token = generateAccessTokenApp(userCredentials.email);
+    return res.status(200).json({
+        message: "Authentication successful!",
+        token: "Bearer " + token,
+    });
 });
 
 export default router;

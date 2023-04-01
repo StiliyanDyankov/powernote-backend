@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { changePass, createUser, findUser, User } from "../db/authDB";
+import { changePass, createUser, findUser, User } from "../db/portalDB";
 import bcrypt from "bcrypt";
 import {
     checkEmailErrors,
@@ -7,17 +7,26 @@ import {
     PasswordErrors,
     validateEmail,
     validatePassword,
-} from "../utils/authValidation";
-import { EmailErrors } from "./../utils/authValidation";
+} from "../utils/credentialValidation";
+import { EmailErrors } from "../utils/credentialValidation";
 import mongoose from "mongoose";
-import { pick } from "lodash";
+import { isEmpty, merge, pick } from "lodash";
 import { handleVerificationCode } from "../utils/verificationCode";
+import jwt from "jsonwebtoken";
+import config from "config";
 
 const router = express.Router();
 
 interface ResCredentialErrors {
     message: string;
     errors: PasswordErrors | EmailErrors;
+}
+
+interface TokenPayloadApp {
+    isUser: boolean;
+    userEmail: string;
+    iat: number;
+    exp: number;
 }
 
 const noEmailServerError = {
@@ -106,34 +115,16 @@ router.post("/register", async (req: Request, res: Response) => {
         return res.status(401).send(resPasswordErrors);
     }
 
-    // hash password
-    // TODO: to be moved to the other endpoint where the actual write is exec
-    let hashedUserCredentials: User = { ...userCredentials };
-    const salt = await bcrypt.genSalt();
-    hashedUserCredentials.password = await bcrypt.hash(
-        userCredentials.password,
-        salt
-    );
-
-    // TODO: Here should be validation code handling
-    // TODO: Here should be jwt issuing
-
-    const token = handleVerificationCode({ email: userCredentials.email, password: userCredentials.password });
+    // Here should be validation code handling
+    // Here should be jwt issuing
+    const token = handleVerificationCode({
+        email: userCredentials.email,
+        password: userCredentials.password,
+    });
     return res.status(200).json({
         message: "Authentication successful!",
         token: "Bearer " + token,
     });
-
-    // create user
-    // const result = await createUser(hashedUserCredentials);
-
-    // handle error case from createUser()
-    // if ((result as Error).message) {
-    //     return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
-    // } else {
-    //     // handle success case from createUser()
-    //     return res.status(200).send(userCredentials);
-    // }
 });
 
 router.post("/login", async (req: Request, res: Response) => {
@@ -311,28 +302,43 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
 });
 
 router.post("/forgot/changePass", async (req: Request, res: Response) => {
-    let userCredentials: User = pick(req.body, ["email", "password"]);
+    const authHeader = pick(req.headers, ["authorization"]);
 
-    // check if email exists in credentials
-    if (!userCredentials.email) {
-        const resEmailErrors: ResCredentialErrors = {
-            message: "No email provided.",
-            errors: noEmailServerError,
-        };
-        return res.status(401).send(resEmailErrors);
+    // handle case when there is no such header
+    if (isEmpty(authHeader)) {
+        return res.status(401).json({
+            message: "Unauthorized.",
+        });
     }
 
-    // check for email errors
-    // no validation needed for login UX
-    // kept to protect against malicious attacks
-    const emailErrors = checkEmailErrors(userCredentials.email);
-    if (!validateEmail(emailErrors)) {
-        const resEmailErrors: ResCredentialErrors = {
-            message: "Account with such email doesn't exist.",
-            errors: noEmailServerError,
-        };
-        return res.status(401).send(resEmailErrors);
+    const token = authHeader.authorization?.substring(7);
+
+    if (token === undefined || token === "") {
+        return res.status(401).json({
+            message: "Unauthorized.",
+        });
     }
+
+    let payload: jwt.JwtPayload | string = {};
+    try {
+        payload = jwt.verify(token, config.get("jwt-secret-key"));
+    } catch (error: any) {
+        return res.status(401).json({
+            message: "Session expired. Please retry again.",
+        });
+    }
+
+    // return res.status(200).json(payload);
+
+    const email = (payload as TokenPayloadApp).userEmail;
+    const { newPassword }: { newPassword: string } = pick(req.body, [
+        "newPassword",
+    ]);
+
+    const userCredentials: User = {
+        email: email,
+        password: newPassword,
+    };
 
     // check if such user exists
     const isRegistered = await findUser(userCredentials.email);
@@ -343,7 +349,7 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
     }
     // handle success case
     else if (

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import mongoose from "mongoose";
-import routerAuth from "./routes/auth";
+import routerAuth from "./routes/portal";
 import routerVerification from "./routes/verification";
 import config from "config";
 

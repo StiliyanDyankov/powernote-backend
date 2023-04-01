@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const authDB_1 = require("../db/authDB");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const authValidation_1 = require("../utils/authValidation");
+const credentialValidation_1 = require("../utils/credentialValidation");
 const lodash_1 = require("lodash");
 const verificationCode_1 = require("../utils/verificationCode");
 const router = express_1.default.Router();
@@ -31,7 +31,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     let userCredentials = (0, lodash_1.pick)(req.body, ["email", "password"]);
     // check if email exists in credentials
     if (!userCredentials.email) {
-        const unprovidedEmailError = (0, authValidation_1.checkEmailErrors)("");
+        const unprovidedEmailError = (0, credentialValidation_1.checkEmailErrors)("");
         const resEmailErrors = {
             message: "No email provided.",
             errors: unprovidedEmailError,
@@ -39,8 +39,8 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         return res.status(401).send(resEmailErrors);
     }
     // check for email errors
-    const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
-    if (!(0, authValidation_1.validateEmail)(emailErrors)) {
+    const emailErrors = (0, credentialValidation_1.checkEmailErrors)(userCredentials.email);
+    if (!(0, credentialValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Invalid email.",
             errors: emailErrors,
@@ -74,7 +74,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
     // check if password exists in credentials
     if (!userCredentials.password) {
-        const noPasswordError = (0, authValidation_1.checkPasswordErrors)("");
+        const noPasswordError = (0, credentialValidation_1.checkPasswordErrors)("");
         const resPasswordErrors = {
             message: "No password provided.",
             errors: noPasswordError,
@@ -82,35 +82,21 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         return res.status(401).send(resPasswordErrors);
     }
     // check for password errors
-    const passwordErrors = (0, authValidation_1.checkPasswordErrors)(userCredentials.password);
-    if (!(0, authValidation_1.validatePassword)(passwordErrors)) {
+    const passwordErrors = (0, credentialValidation_1.checkPasswordErrors)(userCredentials.password);
+    if (!(0, credentialValidation_1.validatePassword)(passwordErrors)) {
         const resPasswordErrors = {
             message: "Invalid password.",
             errors: passwordErrors,
         };
         return res.status(401).send(resPasswordErrors);
     }
-    // hash password
-    // TODO: to be moved to the other endpoint where the actual write is exec
-    let hashedUserCredentials = Object.assign({}, userCredentials);
-    const salt = yield bcrypt_1.default.genSalt();
-    hashedUserCredentials.password = yield bcrypt_1.default.hash(userCredentials.password, salt);
-    // TODO: Here should be validation code handling
-    // TODO: Here should be jwt issuing
+    // Here should be validation code handling
+    // Here should be jwt issuing
     const token = (0, verificationCode_1.handleVerificationCode)({ email: userCredentials.email, password: userCredentials.password });
     return res.status(200).json({
         message: "Authentication successful!",
         token: "Bearer " + token,
     });
-    // create user
-    // const result = await createUser(hashedUserCredentials);
-    // handle error case from createUser()
-    // if ((result as Error).message) {
-    //     return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
-    // } else {
-    //     // handle success case from createUser()
-    //     return res.status(200).send(userCredentials);
-    // }
 }));
 router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let userCredentials = (0, lodash_1.pick)(req.body, ["email", "password"]);
@@ -125,8 +111,8 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // check for email errors
     // no validation needed for login UX
     // kept to protect against malicious attacks
-    const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
-    if (!(0, authValidation_1.validateEmail)(emailErrors)) {
+    const emailErrors = (0, credentialValidation_1.checkEmailErrors)(userCredentials.email);
+    if (!(0, credentialValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
@@ -170,8 +156,8 @@ router.post("/login", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     // check for password errors
     // no validation needed for login UX
     // kept to protect against malicious attacks
-    const passwordErrors = (0, authValidation_1.checkPasswordErrors)(userCredentials.password);
-    if (!(0, authValidation_1.validatePassword)(passwordErrors)) {
+    const passwordErrors = (0, credentialValidation_1.checkPasswordErrors)(userCredentials.password);
+    if (!(0, credentialValidation_1.validatePassword)(passwordErrors)) {
         const resPasswordErrors = {
             message: "Invalid password.",
             errors: {
@@ -223,8 +209,8 @@ router.post("/forgot/emailAuth", (req, res) => __awaiter(void 0, void 0, void 0,
     // check for email errors
     // no validation needed for auth UX
     // kept to protect against malicious attacks
-    const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
-    if (!(0, authValidation_1.validateEmail)(emailErrors)) {
+    const emailErrors = (0, credentialValidation_1.checkEmailErrors)(userCredentials.email);
+    if (!(0, credentialValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
@@ -271,8 +257,8 @@ router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0
     // check for email errors
     // no validation needed for login UX
     // kept to protect against malicious attacks
-    const emailErrors = (0, authValidation_1.checkEmailErrors)(userCredentials.email);
-    if (!(0, authValidation_1.validateEmail)(emailErrors)) {
+    const emailErrors = (0, credentialValidation_1.checkEmailErrors)(userCredentials.email);
+    if (!(0, credentialValidation_1.validateEmail)(emailErrors)) {
         const resEmailErrors = {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
@@ -300,7 +286,7 @@ router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0
     }
     // check if password exists in credentials
     if (!userCredentials.password) {
-        const noPasswordError = (0, authValidation_1.checkPasswordErrors)("");
+        const noPasswordError = (0, credentialValidation_1.checkPasswordErrors)("");
         const resPasswordErrors = {
             message: "No password provided.",
             errors: noPasswordError,
@@ -308,8 +294,8 @@ router.post("/forgot/changePass", (req, res) => __awaiter(void 0, void 0, void 0
         return res.status(401).send(resPasswordErrors);
     }
     // check for password errors
-    const passwordErrors = (0, authValidation_1.checkPasswordErrors)(userCredentials.password);
-    if (!(0, authValidation_1.validatePassword)(passwordErrors)) {
+    const passwordErrors = (0, credentialValidation_1.checkPasswordErrors)(userCredentials.password);
+    if (!(0, credentialValidation_1.validatePassword)(passwordErrors)) {
         const resPasswordErrors = {
             message: "Invalid password.",
             errors: passwordErrors,
