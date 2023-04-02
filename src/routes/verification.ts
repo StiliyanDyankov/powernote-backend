@@ -5,6 +5,7 @@ import config from "config";
 import { User, createUser } from "../db/portalDB";
 import bcrypt from "bcrypt";
 import { generateAccessTokenApp } from "../utils/jwt";
+import { handleVerificationCode } from "../utils/verificationCode";
 
 const router = express.Router();
 
@@ -81,8 +82,8 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
         return res.status(409).json({
             message: "Invalid verification code",
             errors: {
-                error: true
-            }
+                error: true,
+            },
         });
     } else {
         req.body = payload;
@@ -90,6 +91,55 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
         return;
     }
 };
+
+// request contains already validated user credentials in jwt, either:
+// - password and email in case of register;
+// - email in case of forgot;
+// --------------------------------
+// validates jwt
+// gets credentials from prev jwt
+// creates new jwt with new code and credentials from prev token
+router.post("/resendCode", async (req: Request, res: Response) => {
+    // get header containing the token
+    const authHeader = pick(req.headers, ["authorization"]);
+
+    // handle case when there is no such header
+    if (isEmpty(authHeader)) {
+        return res.status(401).json({
+            message: "Unauthorized.",
+        });
+    }
+    
+    // get only the contents of the header and clean it to get token
+    const token = authHeader.authorization?.substring(7);
+
+    // handle case when the actual token doesn't exist in the string
+    if (token === undefined || token === "") {
+        return res.status(401).json({
+            message: "Unauthorized.",
+        });
+    }
+
+    // decrypt jwt to get payload
+    let payload: jwt.JwtPayload | string = {};
+    try {
+        payload = jwt.verify(token, config.get("jwt-secret-key"));
+    } catch (error: any) {
+        return res.status(401).json({
+            message: "Session expired. Please retry again.",
+        });
+    }
+
+    // get user credentials from jwt
+    const userCredentials: User = pick((payload as ExpPayload), ["email", "password"])
+
+    // return new token
+    const newToken = handleVerificationCode(userCredentials);
+    return res.status(200).json({
+        message: "Authentication successful!",
+        token: "Bearer " + newToken,
+    });
+});
 
 // contains validated by middleware credentials in body
 // creates user
@@ -113,11 +163,11 @@ router.post("/register", validateReq, async (req: Request, res: Response) => {
         });
     } else {
         // handle success case from createUser()
-        return res.status(200).send(userCredentials);
+        return res.status(200).json(userCredentials);
     }
 });
 
-// get valid email from decrypted jwt 
+// get valid email from decrypted jwt
 // return authorized user token, to be used in submitting new pass
 router.post("/forgot", validateReq, async (req: Request, res: Response) => {
     let userCredentials: { email: string } = pick(req.body, ["email"]);
