@@ -14,6 +14,14 @@ interface ExpPayload extends User {
     exp: number;
 }
 
+// request contains verification code in body
+// request contains already validated user credentials in jwt, either:
+// - password and email in case of register;
+// - email in case of forgot;
+// in any case contains generated from server verification code in jwt
+// ---------------------------------
+// validates verification code
+// in case of success, appends stored in jwt credentials in req body and passes on
 const validateReq = (req: Request, res: Response, next: NextFunction) => {
     // get header containing the token
     const authHeader = pick(req.headers, ["authorization"]);
@@ -80,8 +88,8 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-// request contains verification code in body
-// request contains jwt in header
+// contains validated by middleware credentials in body
+// creates user
 router.post("/register", validateReq, async (req: Request, res: Response) => {
     let userCredentials: User = pick(req.body, ["email", "password"]);
 
@@ -106,6 +114,8 @@ router.post("/register", validateReq, async (req: Request, res: Response) => {
     }
 });
 
+// get valid email from decrypted jwt 
+// return authorized user token, to be used in submitting new pass
 router.post("/forgot", validateReq, async (req: Request, res: Response) => {
     let userCredentials: { email: string } = pick(req.body, ["email"]);
 

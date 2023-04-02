@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { changePass, createUser, findUser, User } from "../db/portalDB";
+import { changePass, findUser, User } from "../db/portalDB";
 import bcrypt from "bcrypt";
 import {
     checkEmailErrors,
@@ -10,7 +10,7 @@ import {
 } from "../utils/credentialValidation";
 import { EmailErrors } from "../utils/credentialValidation";
 import mongoose from "mongoose";
-import { isEmpty, merge, pick } from "lodash";
+import { isEmpty, pick } from "lodash";
 import { handleVerificationCode } from "../utils/verificationCode";
 import jwt from "jsonwebtoken";
 import config from "config";
@@ -301,6 +301,8 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
     return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
 });
 
+
+// req contains jwt in header - authorized as valid user
 router.post("/forgot/changePass", async (req: Request, res: Response) => {
     const authHeader = pick(req.headers, ["authorization"]);
 
@@ -311,14 +313,17 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
         });
     }
 
+    // get clean token from header value
     const token = authHeader.authorization?.substring(7);
 
+    // handle case when post-processed token doesn't exist
     if (token === undefined || token === "") {
         return res.status(401).json({
             message: "Unauthorized.",
         });
     }
 
+    // verify/decrypt the token
     let payload: jwt.JwtPayload | string = {};
     try {
         payload = jwt.verify(token, config.get("jwt-secret-key"));
@@ -330,7 +335,9 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
 
     // return res.status(200).json(payload);
 
+    // get email from authorized user token
     const email = (payload as TokenPayloadApp).userEmail;
+    //get new password from req body
     const { newPassword }: { newPassword: string } = pick(req.body, [
         "newPassword",
     ]);
@@ -395,7 +402,7 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
         salt
     );
 
-    // create user
+    // change password of found user
     const result = await changePass(hashedUserCredentials);
 
     // handle error case from createUser()
