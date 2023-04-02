@@ -49,7 +49,8 @@ router.post("/register", async (req: Request, res: Response) => {
             message: "No email provided.",
             errors: unprovidedEmailError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
 
     // check for email errors
@@ -59,7 +60,8 @@ router.post("/register", async (req: Request, res: Response) => {
             message: "Invalid email.",
             errors: emailErrors,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
 
     // check if such user exists
@@ -86,13 +88,15 @@ router.post("/register", async (req: Request, res: Response) => {
                 alreadyExists: true,
             },
         };
-        return res.status(409).send(resEmailErrors);
+        return res.status(409).json(resEmailErrors);
+        // error is to be passed to the field
     }
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
-        return res
-            .status(500)
-            .send("INTERNAL ERROR!!! Couldn't create new user.");
+        return res.status(500).json({
+            message: "INTERNAL ERROR!!! Couldn't create new user. Please try again later.",
+        });
+        // error is to be passed to snackbar
     }
 
     // check if password exists in credentials
@@ -102,9 +106,10 @@ router.post("/register", async (req: Request, res: Response) => {
             message: "No password provided.",
             errors: noPasswordError,
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
-
+    
     // check for password errors
     const passwordErrors = checkPasswordErrors(userCredentials.password);
     if (!validatePassword(passwordErrors)) {
@@ -112,7 +117,8 @@ router.post("/register", async (req: Request, res: Response) => {
             message: "Invalid password.",
             errors: passwordErrors,
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
 
     // Here should be validation code handling
@@ -136,7 +142,8 @@ router.post("/login", async (req: Request, res: Response) => {
             message: "No email provided.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
 
     // check for email errors
@@ -148,7 +155,8 @@ router.post("/login", async (req: Request, res: Response) => {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
 
     // check if such user exists
@@ -161,7 +169,8 @@ router.post("/login", async (req: Request, res: Response) => {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     } else if (
         "_id" in
         (isRegistered as unknown as mongoose.Document<
@@ -174,7 +183,10 @@ router.post("/login", async (req: Request, res: Response) => {
     }
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
-        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+        return res.status(500).json({
+            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+        });
+        // error is to be passed to snackbar;
     }
 
     // check if password exists
@@ -190,7 +202,8 @@ router.post("/login", async (req: Request, res: Response) => {
                 noSymbol: false,
             },
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
 
     // check for password errors
@@ -209,7 +222,8 @@ router.post("/login", async (req: Request, res: Response) => {
                 noSymbol: false,
             },
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
 
     // validate password
@@ -234,11 +248,12 @@ router.post("/login", async (req: Request, res: Response) => {
                 noSymbol: false,
             },
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
     // handle success case
     else {
-        return res.status(200).send(userCredentials);
+        return res.status(200).json(userCredentials);
     }
 });
 
@@ -251,7 +266,8 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
             message: "No email provided.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
 
     // check for email errors
@@ -263,7 +279,8 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
 
     // check if such user exists
@@ -275,7 +292,8 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
             message: "Account with such email doesn't exist.",
             errors: noEmailServerError,
         };
-        return res.status(401).send(resEmailErrors);
+        return res.status(401).json(resEmailErrors);
+        // error is to be passed to the field
     }
     // handle success case
     else if (
@@ -296,11 +314,16 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
     }
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
-        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+        return res.status(500).json({
+            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+        });
+        // error is to be passed to snackbar;
     }
-    return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+    return res.status(500).json({
+        message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+    });
+    // error is to be passed to snackbar;
 });
-
 
 // req contains jwt in header - authorized as valid user
 router.post("/forgot/changePass", async (req: Request, res: Response) => {
@@ -371,7 +394,10 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
     }
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
-        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+        return res.status(500).json({
+            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+        });
+        // error is to be passed to snackbar
     }
 
     // check if password exists in credentials
@@ -381,7 +407,8 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
             message: "No password provided.",
             errors: noPasswordError,
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
 
     // check for password errors
@@ -391,7 +418,8 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
             message: "Invalid password.",
             errors: passwordErrors,
         };
-        return res.status(401).send(resPasswordErrors);
+        return res.status(401).json(resPasswordErrors);
+        // error is to be passed to the field
     }
 
     // hash password
@@ -407,10 +435,13 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
 
     // handle error case from createUser()
     if ((result as Error).message) {
-        return res.status(500).send("INTERNAL ERROR!!! Couldn't find user.");
+        return res.status(500).json({
+            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+        });
+        // error is to be passed to snackbar
     } else {
         // handle success case from createUser()
-        return res.status(200).send(userCredentials);
+        return res.status(200).json(userCredentials);
     }
 });
 

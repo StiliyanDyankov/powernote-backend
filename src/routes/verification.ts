@@ -80,6 +80,9 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
     ) {
         return res.status(409).json({
             message: "Invalid verification code",
+            errors: {
+                error: true
+            }
         });
     } else {
         req.body = payload;
