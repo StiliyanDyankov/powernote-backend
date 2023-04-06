@@ -35,6 +35,12 @@ const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
 connectDb();
 // middleware
 app.use(express_1.default.json());
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+    next();
+});
 app.use("/api/auth", portal_1.default);
 app.use("/api/verification", verification_1.default);
 // test only

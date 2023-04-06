@@ -42,6 +42,8 @@ router.get("/", (req: Request, res: Response) => {
 router.post("/register", async (req: Request, res: Response) => {
     let userCredentials: User = pick(req.body, ["email", "password"]);
 
+    console.log(userCredentials);
+
     // check if email exists in credentials
     if (!userCredentials.email) {
         const unprovidedEmailError = checkEmailErrors("");
@@ -94,7 +96,8 @@ router.post("/register", async (req: Request, res: Response) => {
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
         return res.status(500).json({
-            message: "INTERNAL ERROR!!! Couldn't create new user. Please try again later.",
+            message:
+                "INTERNAL ERROR!!! Couldn't create new user. Please try again later.",
         });
         // error is to be passed to snackbar
     }
@@ -109,7 +112,7 @@ router.post("/register", async (req: Request, res: Response) => {
         return res.status(401).json(resPasswordErrors);
         // error is to be passed to the field
     }
-    
+
     // check for password errors
     const passwordErrors = checkPasswordErrors(userCredentials.password);
     if (!validatePassword(passwordErrors)) {
@@ -184,7 +187,8 @@ router.post("/login", async (req: Request, res: Response) => {
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
         return res.status(500).json({
-            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+            message:
+                "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
         });
         // error is to be passed to snackbar;
     }
@@ -315,12 +319,14 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
         return res.status(500).json({
-            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+            message:
+                "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
         });
         // error is to be passed to snackbar;
     }
     return res.status(500).json({
-        message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+        message:
+            "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
     });
     // error is to be passed to snackbar;
 });
@@ -395,7 +401,8 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
     // handle error case from findUser()
     else if ("message" in (isRegistered as unknown as Error)) {
         return res.status(500).json({
-            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+            message:
+                "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
         });
         // error is to be passed to snackbar
     }
@@ -436,7 +443,8 @@ router.post("/forgot/changePass", async (req: Request, res: Response) => {
     // handle error case from createUser()
     if ((result as Error).message) {
         return res.status(500).json({
-            message: "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
+            message:
+                "INTERNAL ERROR!!! Couldn't find user. Please try again later.",
         });
         // error is to be passed to snackbar
     } else {

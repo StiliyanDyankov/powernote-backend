@@ -24,6 +24,12 @@ connectDb();
 
 // middleware
 app.use(express.json());
+app.use((req: Request, res: Response, next: any) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+    next();
+});
 app.use("/api/auth", routerAuth);
 app.use("/api/verification", routerVerification);
 
