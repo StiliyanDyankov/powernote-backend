@@ -53,4 +53,4 @@ export const sendEmail = async (to: string, code: string) => {
     console.log(info);
 };
 
-sendEmail("stiliandiankov0704@gmail.com", "12345");
+// sendEmail("stiliandiankov0704@gmail.com", "12345");

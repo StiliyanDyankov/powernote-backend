@@ -6,6 +6,7 @@
 
 import { merge, random } from "lodash";
 import { generateAccessTokenCode } from "./jwt";
+import { sendEmail } from "./mailingService";
 
 export const handleVerificationCode = (payload: {
     email: string;
@@ -15,6 +16,7 @@ export const handleVerificationCode = (payload: {
     const verificationCode = random(10000, 99999).toString();
 
     // trigger email service - send code
+    sendEmail(payload.email, verificationCode);
 
     // generate jwt with given payload
     let intPayload = merge(payload, { verificationCode });
