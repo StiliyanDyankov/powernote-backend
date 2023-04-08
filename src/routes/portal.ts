@@ -14,6 +14,7 @@ import { isEmpty, pick } from "lodash";
 import { handleVerificationCode } from "../utils/verificationCode";
 import jwt from "jsonwebtoken";
 import config from "config";
+import { generateAccessTokenApp } from "../utils/jwt";
 
 const router = express.Router();
 
@@ -257,7 +258,11 @@ router.post("/login", async (req: Request, res: Response) => {
     }
     // handle success case
     else {
-        return res.status(200).json(userCredentials);
+        const token = generateAccessTokenApp(userCredentials.email);
+        return res.status(200).json({
+            message: "Authentication successful!",
+            token: "Bearer " + token,
+        });
     }
 });
 

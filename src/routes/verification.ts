@@ -28,6 +28,9 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = pick(req.headers, ["authorization"]);
     const providedCode = pick(req.body, ["verificationCode"]);
 
+    console.log("authHeader: ", authHeader);
+    console.log("providedCode: ", providedCode);
+
     // handle case when there is no such header
     if (isEmpty(authHeader)) {
         return res.status(401).json({
