@@ -43,7 +43,6 @@ router.get("/", (req: Request, res: Response) => {
 router.post("/register", async (req: Request, res: Response) => {
     let userCredentials: User = pick(req.body, ["email", "password"]);
 
-    console.log(userCredentials);
 
     // check if email exists in credentials
     if (!userCredentials.email) {
@@ -454,7 +453,11 @@ router.post("/forgot/changePassword", async (req: Request, res: Response) => {
         // error is to be passed to snackbar
     } else {
         // handle success case from createUser()
-        return res.status(200).json(userCredentials);
+        const token = generateAccessTokenApp(userCredentials.email);
+        return res.status(200).json({
+            message: "Authentication successful!",
+            token: "Bearer " + token,
+        });
     }
 });
 

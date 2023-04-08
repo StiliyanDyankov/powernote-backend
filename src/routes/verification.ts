@@ -28,8 +28,6 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = pick(req.headers, ["authorization"]);
     const providedCode = pick(req.body, ["verificationCode"]);
 
-    console.log("authHeader: ", authHeader);
-    console.log("providedCode: ", providedCode);
 
     // handle case when there is no such header
     if (isEmpty(authHeader)) {
@@ -166,7 +164,11 @@ router.post("/register", validateReq, async (req: Request, res: Response) => {
         });
     } else {
         // handle success case from createUser()
-        return res.status(200).json(userCredentials);
+        const token = generateAccessTokenApp(userCredentials.email);
+        return res.status(200).json({
+            message: "Authentication successful!",
+            token: "Bearer " + token,
+        });
     }
 });
 
@@ -174,6 +176,7 @@ router.post("/register", validateReq, async (req: Request, res: Response) => {
 // return authorized user token, to be used in submitting new pass
 router.post("/forgot", validateReq, async (req: Request, res: Response) => {
     let userCredentials: { email: string } = pick(req.body, ["email"]);
+
 
     const token = generateAccessTokenApp(userCredentials.email);
     return res.status(200).json({
