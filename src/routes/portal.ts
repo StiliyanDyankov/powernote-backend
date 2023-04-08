@@ -337,7 +337,7 @@ router.post("/forgot/emailAuth", async (req: Request, res: Response) => {
 });
 
 // req contains jwt in header - authorized as valid user
-router.post("/forgot/changePass", async (req: Request, res: Response) => {
+router.post("/forgot/changePassword", async (req: Request, res: Response) => {
     const authHeader = pick(req.headers, ["authorization"]);
 
     // handle case when there is no such header
