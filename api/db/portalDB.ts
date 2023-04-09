@@ -1,19 +1,19 @@
 import mongoose from "mongoose";
-import config from "config";
+// import config from "config";
 
 mongoose.set("strictQuery", false);
 
-const db: string = config.get("db");
+// const db: string = config.get("db");
 
-const connectDb = async () => {
-    try {
-        console.log(db);
-        await mongoose.connect(db);
-    } catch (e: unknown) {
-        console.log(e);
-    }
-    console.log(`[db]: db is running at ${db}`);
-};
+// const connectDb = async () => {
+//     try {
+//         console.log(db);
+//         await mongoose.connect(db);
+//     } catch (e: unknown) {
+//         console.log(e);
+//     }
+//     console.log(`[db]: db is running at ${db}`);
+// };
 // connectDb();
 
 export interface User {
