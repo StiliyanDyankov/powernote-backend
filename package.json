@@ -2,7 +2,7 @@
   "name": "powernote-backend",
   "version": "1.0.0",
   "description": "backend code for powernote project in express",
-  "main": "./src/index.ts",
+  "main": "./api/index.js",
   "engines": {
     "node": "18.x"
   },
