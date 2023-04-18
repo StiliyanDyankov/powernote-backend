@@ -7,18 +7,39 @@ import config from "config";
 const app = express();
 
 // config vars
-const port = config.get("port");
-const db: string = config.get("db");
+const port: number = parseInt(process.env.PORT || "3000") || config.get("port");
+const db = process.env.DB;
+if (!process.env.DB) {
+    console.error("FATAL ERROR: DB is not defined.");
+    process.exit(1);
+}
+
+if (!process.env.JWT_SECRET_KEY) {
+    console.error("FATAL ERROR: JWT_SECRET_KEY is not defined.");
+    process.exit(1);
+}
+
+if(!process.env.EMAIL_USERNAME) {
+    console.error("FATAL ERROR: EMAIL_USERNAME is not defined.");
+    process.exit(1);
+}
+
+if(!process.env.EMAIL_PASSWORD) {
+    console.error("FATAL ERROR: EMAIL_PASSWORD is not defined.");
+    process.exit(1);
+}
+
+// const db: string = config.get("db");
 
 // connect to db
 const connectDb = async () => {
     try {
         console.log(db);
-        await mongoose.connect(db);
+        await mongoose.connect(db as string, {});
+        console.log(`[db]: db is running at ${db}`);
     } catch (e: unknown) {
         console.log(e);
     }
-    console.log(`[db]: db is running at ${db}`);
 };
 connectDb();
 
@@ -32,7 +53,6 @@ app.use((req: Request, res: Response, next: any) => {
 });
 app.use("/api/auth", routerAuth);
 app.use("/api/verification", routerVerification);
-
 
 // test only
 app.get("/", (req: Request, res: Response) => {

@@ -19,18 +19,35 @@ const verification_1 = __importDefault(require("./routes/verification"));
 const config_1 = __importDefault(require("config"));
 const app = (0, express_1.default)();
 // config vars
-const port = config_1.default.get("port");
-const db = config_1.default.get("db");
+const port = parseInt(process.env.PORT || "3000") || config_1.default.get("port");
+const db = process.env.DB;
+if (!process.env.DB) {
+    console.error("FATAL ERROR: DB is not defined.");
+    process.exit(1);
+}
+if (!process.env.JWT_SECRET_KEY) {
+    console.error("FATAL ERROR: JWT_SECRET_KEY is not defined.");
+    process.exit(1);
+}
+if (!process.env.EMAIL_USERNAME) {
+    console.error("FATAL ERROR: EMAIL_USERNAME is not defined.");
+    process.exit(1);
+}
+if (!process.env.EMAIL_PASSWORD) {
+    console.error("FATAL ERROR: EMAIL_PASSWORD is not defined.");
+    process.exit(1);
+}
+// const db: string = config.get("db");
 // connect to db
 const connectDb = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         console.log(db);
-        yield mongoose_1.default.connect(db);
+        yield mongoose_1.default.connect(db, {});
+        console.log(`[db]: db is running at ${db}`);
     }
     catch (e) {
         console.log(e);
     }
-    console.log(`[db]: db is running at ${db}`);
 });
 connectDb();
 // middleware
