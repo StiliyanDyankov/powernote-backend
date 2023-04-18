@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "test",
-    "start": "ts-node api/index.ts",
+    "start": "node api/index.js",
     "build": "tsc",
     "dev": "nodemon -e ts --exec \"tsc && node dist/index.js\""
   },
