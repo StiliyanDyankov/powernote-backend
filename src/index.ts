@@ -11,22 +11,22 @@ const port: number = parseInt(process.env.PORT || "3000") || config.get("port");
 const db = process.env.DB;
 if (!process.env.DB) {
     console.error("FATAL ERROR: DB is not defined.");
-    // process.exit(1);
+    process.exit(1);
 }
 
 if (!process.env.JWT_SECRET_KEY) {
     console.error("FATAL ERROR: JWT_SECRET_KEY is not defined.");
-    // process.exit(1);
+    process.exit(1);
 }
 
 if(!process.env.EMAIL_USERNAME) {
     console.error("FATAL ERROR: EMAIL_USERNAME is not defined.");
-    // process.exit(1);
+    process.exit(1);
 }
 
 if(!process.env.EMAIL_PASSWORD) {
     console.error("FATAL ERROR: EMAIL_PASSWORD is not defined.");
-    // process.exit(1);
+    process.exit(1);
 }
 
 // const db: string = config.get("db");
