@@ -66,7 +66,7 @@ const validateReq = (req: Request, res: Response, next: NextFunction) => {
     // decrypt jwt to get payload
     let payload: jwt.JwtPayload | string = {};
     try {
-        payload = jwt.verify(token, config.get("jwt-secret-key"));
+        payload = jwt.verify(token, process.env.JWT_SECRET_KEY || config.get("jwt-secret-key"));
     } catch (error: any) {
         return res.status(401).json({
             message: "Session expired. Please retry again.",
@@ -124,7 +124,7 @@ router.post("/resendCode", async (req: Request, res: Response) => {
     // decrypt jwt to get payload
     let payload: jwt.JwtPayload | string = {};
     try {
-        payload = jwt.verify(token, config.get("jwt-secret-key"));
+        payload = jwt.verify(token, process.env.JWT_SECRET_KEY || config.get("jwt-secret-key"));
     } catch (error: any) {
         return res.status(401).json({
             message: "Session expired. Please retry again.",

@@ -359,7 +359,7 @@ router.post("/forgot/changePassword", async (req: Request, res: Response) => {
     // verify/decrypt the token
     let payload: jwt.JwtPayload | string = {};
     try {
-        payload = jwt.verify(token, config.get("jwt-secret-key"));
+        payload = jwt.verify(token, process.env.JWT_SECRET_KEY || config.get("jwt-secret-key"));
     } catch (error: any) {
         return res.status(401).json({
             message: "Session expired. Please retry again.",

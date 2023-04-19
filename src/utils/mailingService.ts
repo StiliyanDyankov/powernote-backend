@@ -6,8 +6,8 @@ let transporter = nodemailer.createTransport({
     service: "gmail",
 
     auth: {
-        user: config.get("email-username"),
-        pass: config.get("email-password"),
+        user: process.env.EMAIL_USERNAME || config.get("email-username"),
+        pass: process.env.EMAIL_PASSWORD || config.get("email-password"),
     },
 });
 
